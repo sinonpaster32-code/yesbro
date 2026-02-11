@@ -1,21 +1,53 @@
-local InputService = game:GetService('UserInputService');
-local TextService = game:GetService('TextService');
-local CoreGui = game:GetService('CoreGui');
-local Teams = game:GetService('Teams');
-local Players = game:GetService('Players');
-local RunService = game:GetService('RunService')
-local TweenService = game:GetService('TweenService');
+local function GetService(name)
+    local service = game:GetService(name)
+    local success, cloned = pcall(function() return cloneref(service) end)
+    return success and cloned or service
+end
+
+-- Randomized Identity generator
+-- Prevents detection via static object names.
+local function GenerateRandomName()
+    local charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    local res = ""
+    for i = 1, math.random(15, 25) do
+        local rand = math.random(1, #charset)
+        res = res .. string.sub(charset, rand, rand)
+    end
+    return res
+end
+
+local InputService = GetService('UserInputService');
+local TextService = GetService('TextService');
+local CoreGui = GetService('CoreGui');
+local Teams = GetService('Teams');
+local Players = GetService('Players');
+local RunService = GetService('RunService')
+local TweenService = GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
 
-local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
-local ScreenGui = Instance.new('ScreenGui');
-ProtectGui(ScreenGui);
 
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global;
-ScreenGui.Parent = gethui();
+local ScreenGui = Instance.new('ScreenGui')
+ScreenGui.Name = GenerateRandomName()
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+
+local function ParentGui(gui)
+    if gethui then
+        gui.Parent = gethui() -- Best: Total invisibility to GetChildren/GetDescendants
+    elseif (syn and syn.protect_gui) then
+        syn.protect_gui(gui)
+        gui.Parent = CoreGui -- High: Spoofs engine responses
+    elseif protect_gui then
+        protect_gui(gui)
+        gui.Parent = CoreGui
+    else
+        gui.Parent = CoreGui -- Fallback: Hidden from standard LocalScripts
+    end
+end
+
+ParentGui(ScreenGui)
 
 local Toggles = {};
 local Options = {};
